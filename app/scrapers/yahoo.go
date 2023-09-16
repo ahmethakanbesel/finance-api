@@ -19,17 +19,11 @@ const (
 	yahooUserAgent        = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36"
 )
 
-type SymbolData struct {
-	Date     string
-	Open     string
-	High     string
-	Low      string
-	Close    string
-	AdjClose string
-	Volume   string
-}
+type YahooScraper struct{}
 
-func GetYahooSymbolData(symbol string, startDate string, endDate string) ([]SymbolData, error) {
+var _ Scraper = (*YahooScraper)(nil)
+
+func (y *YahooScraper) GetSymbolData(symbol string, startDate string, endDate string) ([]SymbolPrice, error) {
 	if symbol == "" {
 		return nil, fmt.Errorf("symbol cannot be empty")
 	}
@@ -42,7 +36,7 @@ func GetYahooSymbolData(symbol string, startDate string, endDate string) ([]Symb
 		endDate = time.Now().Format(dateFormat)
 	}
 
-	data, err := scrapeYahoo(symbol, startDate, endDate)
+	data, err := scrape(y, symbol, startDate, endDate)
 	if err != nil {
 		return nil, err
 	}
@@ -50,40 +44,8 @@ func GetYahooSymbolData(symbol string, startDate string, endDate string) ([]Symb
 	return data, nil
 }
 
-func scrapeYahoo(symbol string, startDate string, endDate string) ([]SymbolData, error) {
-	// Convert start and end dates to time.Time objects for easier manipulation
-	startDateTime, err := time.Parse(dateFormat, startDate)
-	if err != nil {
-		return nil, fmt.Errorf("error parsing start date: %v", err)
-	}
-
-	endDateTime, err := time.Parse(dateFormat, endDate)
-	if err != nil {
-		return nil, fmt.Errorf("error parsing end date: %v", err)
-	}
-
-	var combinedData []SymbolData
-
-	// Split the date range into smaller chunks
-	for currentStartDate := startDateTime; currentStartDate.Before(endDateTime); currentStartDate = currentStartDate.AddDate(0, 0, yahooChunkSize) {
-		// Calculate the current end date for the chunk
-		currentEndDate := currentStartDate.AddDate(0, 0, yahooChunkSize-1)
-		if currentEndDate.After(endDateTime) {
-			currentEndDate = endDateTime
-		}
-
-		// Perform the scrape for the current chunk and aggregate the results
-		chunkData := scrapeYahooChunk(symbol, currentStartDate.Unix(), currentEndDate.Unix())
-		combinedData = append(combinedData, chunkData...)
-	}
-
-	//exportToCSV(combinedData)
-
-	return combinedData, nil
-}
-
-func scrapeYahooChunk(symbol string, startDate int64, endDate int64) []SymbolData {
-	var results []SymbolData
+func (y *YahooScraper) scrapeChunk(symbol string, startDate time.Time, endDate time.Time) ([]SymbolPrice, error) {
+	var results []SymbolPrice
 	geziyor.NewGeziyor(&geziyor.Options{
 		RobotsTxtDisabled: true,
 		StartRequestsFunc: func(g *geziyor.Geziyor) {
@@ -91,8 +53,8 @@ func scrapeYahooChunk(symbol string, startDate int64, endDate int64) []SymbolDat
 			params.Add("events", "history")
 			params.Add("interval", "1d")
 			params.Add("corsDomain", "finance.yahoo.com")
-			params.Add("period1", strconv.FormatInt(startDate, 10))
-			params.Add("period2", strconv.FormatInt(endDate, 10))
+			params.Add("period1", strconv.FormatInt(startDate.Unix(), 10))
+			params.Add("period2", strconv.FormatInt(endDate.Unix(), 10))
 
 			fmt.Println(fmt.Sprintf(yahooBaseUrl+yahooDownloadEndpoint, symbol, params.Encode()))
 			req, _ := client.NewRequest("GET", fmt.Sprintf(yahooBaseUrl+yahooDownloadEndpoint, symbol, params.Encode()), nil)
@@ -115,19 +77,23 @@ func scrapeYahooChunk(symbol string, startDate int64, endDate int64) []SymbolDat
 					continue
 				}
 
-				row := SymbolData{
-					Date:     record[0],
-					Open:     record[1],
-					High:     record[2],
-					Low:      record[3],
-					Close:    record[4],
-					AdjClose: record[5],
-					Volume:   record[6],
+				parsedPrice, err := strconv.ParseFloat(record[4], 64)
+				if err != nil {
+					continue
+				}
+
+				row := SymbolPrice{
+					Date:  record[0],
+					Close: parsedPrice,
 				}
 
 				results = append(results, row)
 			}
 		},
 	}).Start()
-	return results
+	return results, nil
+}
+
+func (y *YahooScraper) getChunkSize() int {
+	return yahooChunkSize
 }
