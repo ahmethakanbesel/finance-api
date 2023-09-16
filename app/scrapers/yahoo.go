@@ -16,7 +16,6 @@ const (
 	yahooBaseUrl          = "https://query1.finance.yahoo.com/v7/finance"
 	yahooDownloadEndpoint = "/download/%s?%s"
 	yahooChunkSize        = 1250
-	yahooUserAgent        = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36"
 )
 
 type YahooScraper struct{}
@@ -58,7 +57,6 @@ func (y *YahooScraper) scrapeChunk(symbol string, startDate time.Time, endDate t
 
 			fmt.Println(fmt.Sprintf(yahooBaseUrl+yahooDownloadEndpoint, symbol, params.Encode()))
 			req, _ := client.NewRequest("GET", fmt.Sprintf(yahooBaseUrl+yahooDownloadEndpoint, symbol, params.Encode()), nil)
-			req.Header.Add("User-Agent", yahooUserAgent)
 
 			g.Do(req, g.Opt.ParseFunc)
 		},
