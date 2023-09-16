@@ -79,7 +79,7 @@ func (y *YahooScraper) scrapeChunk(symbol string, startDate time.Time, endDate t
 				if err != nil {
 					continue
 				}
-
+				
 				row := SymbolPrice{
 					Date:  record[0],
 					Close: parsedPrice,
