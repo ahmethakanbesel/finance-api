@@ -30,6 +30,9 @@ func setupRoute(app *pocketbase.PocketBase, endpoint string, scraperName string)
 			}
 
 			startDateStr := c.QueryParam("startDate")
+			if startDateStr == "" {
+				return c.String(http.StatusBadRequest, "Start date must be provided")
+			}
 			startDate, err := time.Parse("2006-01-02", startDateStr)
 			if err != nil {
 				return err
