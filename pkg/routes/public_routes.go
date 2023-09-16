@@ -1,11 +1,13 @@
 package routes
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
 
 	"github.com/ahmethakanbesel/finance-api/app/scrapers"
+	"github.com/ahmethakanbesel/finance-api/pkg/utils"
 	"github.com/labstack/echo/v5"
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase"
@@ -88,7 +90,7 @@ func setupRoute(app *pocketbase.PocketBase, endpoint string, scraperName string)
 					record.Set("currency", currency)
 
 					if err := app.Dao().SaveRecord(record); err != nil {
-						return err
+						fmt.Println(err)
 					}
 				}
 
@@ -125,6 +127,16 @@ func setupRoute(app *pocketbase.PocketBase, endpoint string, scraperName string)
 			)
 			if err != nil {
 				return err
+			}
+
+			format := c.QueryParam("format")
+
+			if format == "csv" {
+				csvString, err := utils.PriceRecordstoCsv(records)
+				if err != nil {
+					return err
+				}
+				return c.String(http.StatusOK, csvString)
 			}
 
 			return c.JSON(http.StatusOK, &GeneralResponse{
