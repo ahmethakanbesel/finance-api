@@ -74,6 +74,20 @@ Default email is `admin@example.com` and password is `1234567890`.
 http://127.0.0.1:8090/api/yahoo/symbol/THYAO.IS?startDate=2023-06-01&endDate=2023-09-30&currency=TRY
 ```
 
+### Use with Pandas
+
+```python
+import pandas as pd
+
+API_URL = 'http://127.0.0.1:8090'
+
+def get_data(symbol, start_date, end_date):
+    url = f'{API_URL}/api/yahoo/symbol/{symbol}?startDate={start_date}&endDate={end_date}&format=csv'
+    df = pd.read_csv(url, parse_dates=['Date'])
+    df.set_index('Date', inplace=True)
+    return df
+```
+
 ## Credits
 
 - [Pocketbase](https://github.com/pocketbase/pocketbase)
