@@ -88,6 +88,20 @@ def get_data(symbol, start_date, end_date):
     return df
 ```
 
+## Demo
+
+- `TEFAS (json)`
+
+```
+https://finans.dokuz.gen.tr/api/tefas/fund/HKP?startDate=2023-06-01&endDate=2023-09-30&currency=TRY
+```
+
+- `Yahoo Finance (csv)`
+
+```
+https://finans.dokuz.gen.tr/api/yahoo/symbol/THYAO.IS?startDate=2023-06-01&endDate=2023-09-30&currency=TRY&format=csv
+```
+
 ## Credits
 
 - [Pocketbase](https://github.com/pocketbase/pocketbase)
