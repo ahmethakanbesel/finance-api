@@ -392,6 +392,7 @@ github.com/pocketbase/pocketbase/migrations/logs
 github.com/pocketbase/pocketbase/models
 github.com/pocketbase/pocketbase/models/schema
 github.com/pocketbase/pocketbase/models/settings
+github.com/pocketbase/pocketbase/plugins/migratecmd
 github.com/pocketbase/pocketbase/resolvers
 github.com/pocketbase/pocketbase/tokens
 github.com/pocketbase/pocketbase/tools/archive

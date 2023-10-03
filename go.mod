@@ -5,6 +5,7 @@ go 1.20
 require (
 	github.com/geziyor/geziyor v0.0.0-20230315135110-a242b58aaa65
 	github.com/labstack/echo/v5 v5.0.0-20230722203903-ec5b858dab61
+	github.com/pocketbase/dbx v1.10.1
 	github.com/pocketbase/pocketbase v0.18.6
 )
 
@@ -66,7 +67,6 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.17 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
 	github.com/mgutz/ansi v0.0.0-20200706080929-d51e80ef957d // indirect
-	github.com/pocketbase/dbx v1.10.1 // indirect
 	github.com/prometheus/client_golang v1.12.1 // indirect
 	github.com/prometheus/client_model v0.2.0 // indirect
 	github.com/prometheus/common v0.34.0 // indirect
