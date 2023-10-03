@@ -22,7 +22,7 @@ type YahooScraper struct{}
 
 var _ Scraper = (*YahooScraper)(nil)
 
-func (y *YahooScraper) GetSymbolData(symbol string, startDate string, endDate string) ([]SymbolPrice, error) {
+func (y *YahooScraper) GetSymbolData(symbol string, startDate string, endDate string) (<-chan SymbolPrice, error) {
 	if symbol == "" {
 		return nil, fmt.Errorf("symbol cannot be empty")
 	}
@@ -43,8 +43,8 @@ func (y *YahooScraper) GetSymbolData(symbol string, startDate string, endDate st
 	return data, nil
 }
 
-func (y *YahooScraper) scrapeChunk(symbol string, startDate time.Time, endDate time.Time) ([]SymbolPrice, error) {
-	var results []SymbolPrice
+func (y *YahooScraper) scrapeChunk(symbol string, startDate time.Time, endDate time.Time) (<-chan SymbolPrice, error) {
+	results := make(chan SymbolPrice)
 	geziyor.NewGeziyor(&geziyor.Options{
 		RobotsTxtDisabled: true,
 		StartRequestsFunc: func(g *geziyor.Geziyor) {
@@ -55,7 +55,6 @@ func (y *YahooScraper) scrapeChunk(symbol string, startDate time.Time, endDate t
 			params.Add("period1", strconv.FormatInt(startDate.Unix(), 10))
 			params.Add("period2", strconv.FormatInt(endDate.Unix(), 10))
 
-			fmt.Println(fmt.Sprintf(yahooBaseUrl+yahooDownloadEndpoint, symbol, params.Encode()))
 			req, _ := client.NewRequest("GET", fmt.Sprintf(yahooBaseUrl+yahooDownloadEndpoint, symbol, params.Encode()), nil)
 
 			g.Do(req, g.Opt.ParseFunc)
@@ -63,30 +62,31 @@ func (y *YahooScraper) scrapeChunk(symbol string, startDate time.Time, endDate t
 		ParseFunc: func(g *geziyor.Geziyor, r *client.Response) {
 			reader := csv.NewReader(bytes.NewReader(r.Body))
 			isFirstLine := true
-			for {
-				// Read one line from the CSV
-				record, err := reader.Read()
-				if err != nil {
-					break // End of file or error, break the loop
-				}
+			go func() {
+				for {
+					// Read one line from the CSV
+					record, err := reader.Read()
+					if err != nil {
+						break // End of file or error, break the loop
+					}
 
-				if isFirstLine {
-					isFirstLine = false
-					continue
-				}
+					if isFirstLine {
+						isFirstLine = false
+						continue
+					}
 
-				parsedPrice, err := strconv.ParseFloat(record[4], 64)
-				if err != nil {
-					continue
-				}
-				
-				row := SymbolPrice{
-					Date:  record[0],
-					Close: parsedPrice,
-				}
+					parsedPrice, err := strconv.ParseFloat(record[4], 64)
+					if err != nil {
+						continue
+					}
 
-				results = append(results, row)
-			}
+					results <- SymbolPrice{
+						Date:  record[0],
+						Close: parsedPrice,
+					}
+				}
+				close(results)
+			}()
 		},
 	}).Start()
 	return results, nil

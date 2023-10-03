@@ -80,7 +80,7 @@ func setupRoute(app *pocketbase.PocketBase, endpoint string, scraperName string)
 					return err
 				}
 
-				for _, data := range scrapedData {
+				for data := range scrapedData {
 					if data.Date == "" || data.Close < 0 {
 						continue
 					}

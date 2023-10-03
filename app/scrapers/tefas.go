@@ -21,7 +21,7 @@ const (
 	tefasChunkSize          = 60
 )
 
-type TefasScraper struct {}
+type TefasScraper struct{}
 
 var _ Scraper = (*TefasScraper)(nil)
 
@@ -42,7 +42,7 @@ type fundData struct {
 	Data            []tefasPriceData `json:"data"`
 }
 
-func (t *TefasScraper) GetSymbolData(symbol string, startDate string, endDate string) ([]SymbolPrice, error) {
+func (t *TefasScraper) GetSymbolData(symbol string, startDate string, endDate string) (<-chan SymbolPrice, error) {
 	if symbol == "" {
 		return nil, fmt.Errorf("fund code cannot be empty")
 	}
@@ -64,8 +64,8 @@ func (t *TefasScraper) GetSymbolData(symbol string, startDate string, endDate st
 }
 
 // Scrape a single chunk of data
-func (t *TefasScraper) scrapeChunk(fundCode string, startDate time.Time, endDate time.Time) ([]SymbolPrice, error) {
-	var results []SymbolPrice
+func (t *TefasScraper) scrapeChunk(fundCode string, startDate time.Time, endDate time.Time) (<-chan SymbolPrice, error) {
+	results := make(chan SymbolPrice)
 	geziyor.NewGeziyor(&geziyor.Options{
 		StartRequestsFunc: func(g *geziyor.Geziyor) {
 			params := url.Values{}
@@ -88,12 +88,15 @@ func (t *TefasScraper) scrapeChunk(fundCode string, startDate time.Time, endDate
 		ParseFunc: func(g *geziyor.Geziyor, r *client.Response) {
 			var data fundData
 			err := json.Unmarshal(r.Body, &data)
-			for i := range data.Data {
-				results = append(results, SymbolPrice{
-					Date:  t.parseTimestamp(data.Data[i].Timestamp),
-					Close: data.Data[i].Price,
-				})
-			}
+			go func() {
+				for i := range data.Data {
+					results <- SymbolPrice{
+						Date:  t.parseTimestamp(data.Data[i].Timestamp),
+						Close: data.Data[i].Price,
+					}
+				}
+				close(results)
+			}()
 			if err != nil {
 				fmt.Println("Error:", err)
 				return

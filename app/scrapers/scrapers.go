@@ -2,6 +2,8 @@ package scrapers
 
 import (
 	"fmt"
+	"math"
+	"sync"
 	"time"
 )
 
@@ -15,8 +17,8 @@ type SymbolPrice struct {
 }
 
 type Scraper interface {
-	GetSymbolData(symbol string, startDate string, endDate string) ([]SymbolPrice, error)
-	scrapeChunk(symbol string, startDate time.Time, endDate time.Time) ([]SymbolPrice, error)
+	GetSymbolData(symbol string, startDate string, endDate string) (<-chan SymbolPrice, error)
+	scrapeChunk(symbol string, startDate time.Time, endDate time.Time) (<-chan SymbolPrice, error)
 	getChunkSize() int
 }
 
@@ -31,8 +33,7 @@ func CreateScraper(source string) (Scraper, error) {
 	}
 }
 
-func scrape(scraper Scraper, symbol string, startDate string, endDate string) ([]SymbolPrice, error) {
-	// Convert start and end dates to time.Time objects for easier manipulation
+func scrape(scraper Scraper, symbol string, startDate string, endDate string) (<-chan SymbolPrice, error) {
 	startDateTime, err := time.Parse(dateFormat, startDate)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing start date: %v", err)
@@ -43,24 +44,41 @@ func scrape(scraper Scraper, symbol string, startDate string, endDate string) ([
 		return nil, fmt.Errorf("error parsing end date: %v", err)
 	}
 
-	var combinedData []SymbolPrice
 	chunkSize := scraper.getChunkSize()
+	numChunks := int(math.Ceil(float64(endDateTime.Sub(startDateTime).Hours()) / float64(24*chunkSize)))
+	resultChan := make(chan SymbolPrice, numChunks)
 
+	var wg sync.WaitGroup
 	// Split the date range into smaller chunks
-	for currentStartDate := startDateTime; currentStartDate.Before(endDateTime); currentStartDate = currentStartDate.AddDate(0, 0, chunkSize) {
-		// Calculate the current end date for the chunk
-		currentEndDate := currentStartDate.AddDate(0, 0, chunkSize-1)
-		if currentEndDate.After(endDateTime) {
-			currentEndDate = endDateTime
-		}
+	// It is needed for bypassing the rate limit of the source
+	go func() {
+		defer close(resultChan)
+		for currentStartDate := startDateTime; currentStartDate.Before(endDateTime); currentStartDate = currentStartDate.AddDate(0, 0, chunkSize) {
+			currentEndDate := currentStartDate.AddDate(0, 0, chunkSize-1)
+			if currentEndDate.After(endDateTime) {
+				currentEndDate = endDateTime
+			}
 
-		// Perform the scrape for the current chunk and aggregate the results
-		chunkData, err := scraper.scrapeChunk(symbol, currentStartDate, currentEndDate)
-		if err != nil {
-			return nil, fmt.Errorf("error scraping chunk: %v", err)
-		}
-		combinedData = append(combinedData, chunkData...)
-	}
+			wg.Add(1)
+			go func(symbol string, startDate, endDate time.Time) {
+				chunkData, err := scraper.scrapeChunk(symbol, startDate, endDate)
+				if err != nil {
+					wg.Done()
+					return
+				}
 
-	return combinedData, nil
+				wg.Add(1)
+				go func() {
+					for data := range chunkData {
+						resultChan <- data
+					}
+					wg.Done()
+				}()
+				wg.Done()
+			}(symbol, currentStartDate, currentEndDate)
+		}
+		wg.Wait()
+	}()
+
+	return resultChan, nil
 }
