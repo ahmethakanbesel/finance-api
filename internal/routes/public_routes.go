@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/ahmethakanbesel/finance-api/app/scrapers"
-	"github.com/ahmethakanbesel/finance-api/pkg/utils"
+	"github.com/ahmethakanbesel/finance-api/internal/utils"
 	"github.com/labstack/echo/v5"
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase"
