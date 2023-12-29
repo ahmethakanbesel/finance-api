@@ -88,6 +88,59 @@ def get_data(symbol, start_date, end_date):
     return df
 ```
 
+### Use as a Go package
+
+Both `tefas` and `yahoo` packages can be used independently from the web API,
+and they implement `Scraper` interface.
+
+```golang
+type Scraper interface {
+	GetSymbolData(symbol string, startDate, endDate time.Time) (<-chan *SymbolPrice, error)
+}
+```
+
+```golang
+package main
+
+import (
+	"fmt"
+	"time"
+
+	"github.com/ahmethakanbesel/finance-api/tefas"
+	"github.com/ahmethakanbesel/finance-api/yahoo"
+)
+
+func main() {
+	tefasScraper := tefas.NewScraper(
+		tefas.WithWorkers(5),
+	)
+
+	// get last year's data for the given fund
+	tefasData, err := tefasScraper.GetSymbolData("FUNDCODE", time.Now().AddDate(-1, 0, 0), time.Now())
+	if err != nil {
+		// handle error
+	}
+
+	for data := range tefasData {
+		fmt.Println(data.Date, data.Close)
+	}
+
+	yahooScraper := yahoo.NewScraper(
+		yahoo.WithWorkers(5),
+	)
+
+	// get last year's data for the given symbol
+	yahooData, err := yahooScraper.GetSymbolData("SYMBOLCODE", time.Now().AddDate(-1, 0, 0), time.Now())
+	if err != nil {
+		// handle error
+	}
+
+	for data := range yahooData {
+		fmt.Println(data.Date, data.Close)
+	}
+}
+```
+
 ## Demo
 
 - `TEFAS (json)`
@@ -102,6 +155,16 @@ https://finans.dokuz.gen.tr/api/v1/tefas/funds/HKP?startDate=2023-06-01&endDate=
 https://finans.dokuz.gen.tr/api/v1/yahoo/symbols/THYAO.IS?startDate=2023-06-01&endDate=2023-09-30&currency=TRY&format=csv
 ```
 
+## Web UI
+
+The web UI is incomplete, and it is not ready to work out of the box. The source
+code can be found under `/ui` folder.
+
+### Preview
+
+![web ui preview](/docs/web-ui-preview.png "web ui preview")
+
 ## Credits
 
 - [Pocketbase](https://github.com/pocketbase/pocketbase)
+- [Tremor](https://www.tremor.so/)
