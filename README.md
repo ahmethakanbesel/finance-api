@@ -71,7 +71,7 @@ Default email is `admin@example.com` and password is `1234567890`.
   `json` or `csv`. Default is `json`.
 
 ```
-http://127.0.0.1:8090/api/yahoo/symbol/THYAO.IS?startDate=2023-06-01&endDate=2023-09-30&currency=TRY
+http://127.0.0.1:8090/api/v1/yahoo/symbols/THYAO.IS?startDate=2023-06-01&endDate=2023-09-30&currency=TRY
 ```
 
 ### Use with Pandas
@@ -82,7 +82,7 @@ import pandas as pd
 API_URL = 'http://127.0.0.1:8090'
 
 def get_data(symbol, start_date, end_date):
-    url = f'{API_URL}/api/yahoo/symbol/{symbol}?startDate={start_date}&endDate={end_date}&format=csv'
+    url = f'{API_URL}/api/v1/yahoo/symbols/{symbol}?startDate={start_date}&endDate={end_date}&format=csv'
     df = pd.read_csv(url, parse_dates=['Date'])
     df.set_index('Date', inplace=True)
     return df
@@ -93,13 +93,13 @@ def get_data(symbol, start_date, end_date):
 - `TEFAS (json)`
 
 ```
-https://finans.dokuz.gen.tr/api/tefas/fund/HKP?startDate=2023-06-01&endDate=2023-09-30&currency=TRY
+https://finans.dokuz.gen.tr/api/v1/tefas/funds/HKP?startDate=2023-06-01&endDate=2023-09-30&currency=TRY
 ```
 
 - `Yahoo Finance (csv)`
 
 ```
-https://finans.dokuz.gen.tr/api/yahoo/symbol/THYAO.IS?startDate=2023-06-01&endDate=2023-09-30&currency=TRY&format=csv
+https://finans.dokuz.gen.tr/api/v1/yahoo/symbols/THYAO.IS?startDate=2023-06-01&endDate=2023-09-30&currency=TRY&format=csv
 ```
 
 ## Credits
