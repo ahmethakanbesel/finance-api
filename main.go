@@ -6,9 +6,11 @@ import (
 	"strings"
 
 	_ "github.com/ahmethakanbesel/finance-api/migrations"
-	"github.com/ahmethakanbesel/finance-api/pkg/routes"
+	"github.com/ahmethakanbesel/finance-api/tefas"
+	"github.com/ahmethakanbesel/finance-api/yahoo"
 
 	"github.com/pocketbase/pocketbase"
+	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/plugins/migratecmd"
 )
 
@@ -24,7 +26,25 @@ func main() {
 		Automigrate: isGoRun,
 	})
 
-	routes.PublicRoutes(app)
+	// Setup tefas service
+	tefasScraper := tefas.NewScraper(
+		tefas.WithWorkers(5),
+	)
+	tefasService := tefas.NewService(app, tefasScraper)
+	tefasApi := tefas.NewApi(tefasService, app)
+
+	// Setup yahoo finance service
+	yahooScraper := yahoo.NewScraper(
+		yahoo.WithWorkers(5),
+	)
+	yahooService := yahoo.NewService(app, yahooScraper)
+	yahooApi := yahoo.NewApi(yahooService, app)
+
+	app.OnBeforeServe().Add(func(e *core.ServeEvent) error {
+		tefasApi.SetupRoutes(e.Router.Group("/api/v1"))
+		yahooApi.SetupRoutes(e.Router.Group("/api/v1"))
+		return nil
+	})
 
 	if err := app.Start(); err != nil {
 		log.Fatal(err)
