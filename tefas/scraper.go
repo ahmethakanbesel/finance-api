@@ -20,7 +20,7 @@ const (
 	baseUrl            = "https://www.tefas.gov.tr"
 	historyEndpoint    = "https://www.tefas.gov.tr/api/DB/BindHistoryInfo"
 	allocationEndpoint = "https://www.tefas.gov.tr/api/DB/BindHistoryAllocation"
-	fundPageEndpoint   = "FonAnaliz.aspx?FonKod="
+	referer            = "http://www.tefas.gov.tr/TarihselVeriler.aspx"
 	dateFormat         = "2006-01-02"
 	chunkSize          = 60
 )
@@ -160,8 +160,8 @@ func getFundData(fundCode string, startDate, endDate time.Time) (*fundData, erro
 	}
 
 	req.Header.Add("X-Requested-With", "XMLHttpRequest")
-	req.Header.Add("Origin", "http://www.tefas.gov.tr")
-	req.Header.Add("Referer", "http://www.tefas.gov.tr/TarihselVeriler.aspx")
+	req.Header.Add("Origin", baseUrl)
+	req.Header.Add("Referer", referer)
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Add("Accept", "application/json")
 
