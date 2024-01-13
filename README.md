@@ -111,12 +111,14 @@ import (
 )
 
 func main() {
+	ctx := context.Background()
+
 	tefasScraper := tefas.NewScraper(
 		tefas.WithWorkers(5),
 	)
 
 	// get last year's data for the given fund
-	tefasData, err := tefasScraper.GetSymbolData("FUNDCODE", time.Now().AddDate(-1, 0, 0), time.Now())
+	tefasData, err := tefasScraper.GetSymbolData(ctx, "FUNDCODE", time.Now().AddDate(-1, 0, 0), time.Now())
 	if err != nil {
 		// handle error
 	}
@@ -130,7 +132,7 @@ func main() {
 	)
 
 	// get last year's data for the given symbol
-	yahooData, err := yahooScraper.GetSymbolData("SYMBOLCODE", time.Now().AddDate(-1, 0, 0), time.Now())
+	yahooData, err := yahooScraper.GetSymbolData(ctx, "SYMBOLCODE", time.Now().AddDate(-1, 0, 0), time.Now())
 	if err != nil {
 		// handle error
 	}

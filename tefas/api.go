@@ -28,6 +28,8 @@ func (a *Api) SetupRoutes(g *echo.Group) {
 }
 
 func (a *Api) getFundData(c echo.Context) error {
+	ctx := c.Request().Context()
+
 	symbol := strings.ToUpper(c.PathParam("symbol"))
 	if len(symbol) < 3 {
 		return c.String(http.StatusBadRequest, "symbol must be at least 3 characters")
@@ -56,7 +58,7 @@ func (a *Api) getFundData(c echo.Context) error {
 		return c.String(http.StatusBadRequest, "currency must be either TRY or USD")
 	}
 
-	records, err := a.service.GetAndSaveFundData(symbol, currency, startDate, endDate)
+	records, err := a.service.GetAndSaveFundData(ctx, symbol, currency, startDate, endDate)
 	if err != nil {
 		return c.String(http.StatusInternalServerError, err.Error())
 	}

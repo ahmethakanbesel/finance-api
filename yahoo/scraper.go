@@ -2,6 +2,7 @@ package yahoo
 
 import (
 	"bytes"
+	"context"
 	"encoding/csv"
 	"fmt"
 	"io"
@@ -50,7 +51,7 @@ type (
 	}
 )
 
-func (s *Scraper) GetSymbolData(symbol string, startDate, endDate time.Time) (<-chan *scraper.SymbolPrice, error) {
+func (s *Scraper) GetSymbolData(ctx context.Context, symbol string, startDate, endDate time.Time) (<-chan *scraper.SymbolPrice, error) {
 	if symbol == "" {
 		return nil, fmt.Errorf("symbol cannot be empty")
 	}

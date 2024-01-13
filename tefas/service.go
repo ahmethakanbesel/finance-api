@@ -1,6 +1,7 @@
 package tefas
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"log/slog"
@@ -18,8 +19,8 @@ const (
 )
 
 type Service interface {
-	GetAndSaveFundData(fundCode, currency string, startDate, endDate time.Time) ([]*models.Record, error)
-	GetScrape(fundCode, currenct string, startDate, endDate time.Time) (*models.Record, error)
+	GetAndSaveFundData(ctx context.Context, fundCode, currency string, startDate, endDate time.Time) ([]*models.Record, error)
+	GetScrape(ctx context.Context, fundCode, currenct string, startDate, endDate time.Time) (*models.Record, error)
 }
 
 type service struct {
@@ -37,7 +38,7 @@ func NewService(app *pocketbase.PocketBase, scraper scraper.Scraper) Service {
 	}
 }
 
-func (s *service) GetScrape(fundCode, currency string, startDate, endDate time.Time) (*models.Record, error) {
+func (s *service) GetScrape(ctx context.Context, fundCode, currency string, startDate, endDate time.Time) (*models.Record, error) {
 	record, err := s.app.Dao().FindFirstRecordByFilter(
 		"scrapes",
 		"source = {:source} && symbol = {:symbol} && startDate = {:startDate} && endDate = {:endDate} && currency = {:currency}",
@@ -53,16 +54,16 @@ func (s *service) GetScrape(fundCode, currency string, startDate, endDate time.T
 	return record, err
 }
 
-func (s *service) GetAndSaveFundData(fundCode, currency string, startDate, endDate time.Time) ([]*models.Record, error) {
+func (s *service) GetAndSaveFundData(ctx context.Context, fundCode, currency string, startDate, endDate time.Time) ([]*models.Record, error) {
 	dao := s.app.Dao()
 
-	record, err := s.GetScrape(fundCode, currency, startDate, endDate)
+	record, err := s.GetScrape(ctx, fundCode, currency, startDate, endDate)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return nil, err
 	}
 
 	if record == nil {
-		dataChan, err := s.scraper.GetSymbolData(fundCode, startDate, endDate)
+		dataChan, err := s.scraper.GetSymbolData(ctx, fundCode, startDate, endDate)
 		if err != nil {
 			return nil, err
 		}

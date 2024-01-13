@@ -1,6 +1,7 @@
 package scraper
 
 import (
+	"context"
 	"time"
 )
 
@@ -9,5 +10,5 @@ const (
 )
 
 type Scraper interface {
-	GetSymbolData(symbol string, startDate, endDate time.Time) (<-chan *SymbolPrice, error)
+	GetSymbolData(ctx context.Context, symbol string, startDate, endDate time.Time) (<-chan *SymbolPrice, error)
 }
