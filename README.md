@@ -38,7 +38,7 @@ docker run -p 8090:8090 -d --name finance-api -e PORT=8090 --restart unless-stop
 #### TEFAS
 
 ```
-http://127.0.0.1:8090/api/tefas/fund/:code
+http://127.0.0.1:8090/api/v1/tefas/funds/:code
 ```
 
 `:code` is the code of the fund to be fetched.
@@ -46,7 +46,7 @@ http://127.0.0.1:8090/api/tefas/fund/:code
 #### Yahoo Finance
 
 ```
-http://127.0.0.1:8090/api/yahoo/symbol/:symbol
+http://127.0.0.1:8090/api/v1/yahoo/symbols/:symbol
 ```
 
 `:symbol` is the symbol of the stock to be fetched. For example, for THYAO.IS
