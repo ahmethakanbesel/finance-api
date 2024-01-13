@@ -30,7 +30,9 @@ type Scraper struct {
 var _ scraper.Scraper = (*Scraper)(nil)
 
 func NewScraper(options ...func(*Scraper)) *Scraper {
-	s := &Scraper{}
+	s := &Scraper{
+		workers: 5,
+	}
 	for _, o := range options {
 		o(s)
 	}
