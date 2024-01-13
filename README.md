@@ -7,9 +7,9 @@
 
 ## Usage
 
-### Running the Server
+### Running the server
 
-#### Download from Releases
+#### Download from releases
 
 ```bash
 ./finance-api serve
@@ -21,7 +21,7 @@
 ./finance-api serve --http=0.0.0.0:8080
 ```
 
-#### Run from Source
+#### Run from the source
 
 ```bash
 go run main.go serve
@@ -30,7 +30,7 @@ go run main.go serve
 #### Docker
 
 ```bash
-docker run -p 8090:8090 -d --name finance-api -e PORT=8090 --restart unless-stopped finance-api
+docker compose up -d
 ```
 
 ### Routes
@@ -60,7 +60,7 @@ http://127.0.0.1:8090/_
 
 Default email is `admin@example.com` and password is `1234567890`.
 
-### Query Parameters
+### Query parameters
 
 - `startDate`: Start date of the data to be fetched. Format: `YYYY-MM-DD`
 - `endDate`: Optional, if not provided `today` will be used. End date of the
