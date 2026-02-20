@@ -20,8 +20,12 @@ test: ## Run tests
 	@$(go_test) $(TESTFLAGS) -race -count=1 -timeout=60s ./...
 
 ##@ Check
+.PHONY: vet
+vet: ## Run go vet
+	@go vet ./...
+
 .PHONY: check
-check: lint checkfmt ## Run all checks
+check: vet lint checkfmt ## Run all checks
 
 .PHONY: lint
 lint: ## Run golangci-lint
