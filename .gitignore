@@ -1,13 +1,7 @@
 .space/
 .vscode/
 .DS_Store
-pb_data
-pb_data_
 dist/
-finance-api
-finance-api.exe
-finance-api
-finance-api.exe
 *.db
 *.db-wal
 *.db-shm
