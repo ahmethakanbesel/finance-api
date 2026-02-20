@@ -1,0 +1,17 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: finance-api
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - DB_PATH=/data/finance.db
+      - WORKERS=5
+    volumes:
+      - db-data:/data
+
+volumes:
+  db-data:

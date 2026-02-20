@@ -1,10 +1,13 @@
-FROM golang:1.21-alpine as builder
+FROM golang:1.25-alpine AS builder
 WORKDIR /app
 
-COPY . ./
-RUN CGO_ENABLED=0 go build -o /finance-api
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY . .
+RUN CGO_ENABLED=0 go build -o /finance-api ./cmd/finance-api
 
 FROM gcr.io/distroless/static-debian12
 COPY --from=builder /finance-api .
 EXPOSE 8080
-CMD ["/finance-api", "serve", "--http=0.0.0.0:8080"]
+CMD ["/finance-api"]

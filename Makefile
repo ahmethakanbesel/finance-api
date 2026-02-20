@@ -5,64 +5,39 @@ else
 	go_test=gotest
 endif
 
-semgrep ?= -
-ifeq (,$(shell which semgrep))
-	semgrep=echo "-- Running inside Docker --"; docker run --rm -v $$(pwd):/src returntocorp/semgrep:0.86.5
-else
-	semgrep=semgrep
-endif
-
 ##@ Build
 .PHONY: build
-build: ## Build HTTP API
-	@go build $(LDFLAGS) -mod=vendor .
+build: ## Build the finance-api binary
+	@go build -o finance-api ./cmd/finance-api
 
-.PHONY: gogenerate
-gogenerate: ## Generate stringer and mock files
-	@go generate -mod=vendor ./...
+.PHONY: run
+run: build ## Build and run the server
+	@./finance-api
 
 ##@ Test
 .PHONY: test
 test: ## Run tests
-	@$(go_test) $(TESTFLAGS) -race -mod=vendor -count=1 -timeout=45s ./...
+	@$(go_test) $(TESTFLAGS) -race -count=1 -timeout=60s ./...
 
 ##@ Check
 .PHONY: check
-check: unparam staticcheck vet semgrep checkfmt ## Run all checks
+check: lint checkfmt ## Run all checks
 
-.PHONY: staticcheck
-staticcheck: ## Run staticcheck
-	@# Ignore below checks because of oapi-codegen generated files
-	@staticcheck -checks=inherit,-ST1005,-SA1029,-SA4006 ./...
-
-.PHONY: vet
-vet: ## Run go vet
-	@go vet -mod=vendor ./...
-
-.PHONY: unparam
-unparam: ## Run unparam
-	@unparam ./...
-
-.PHONY: semgrep
-semgrep: ## Run semgrep
-	@$(semgrep) --quiet --metrics=off --config="r/dgryski.semgrep-go" .
-
-.PHONY: checkcodegen
-checkcodegen: gogenerate
-	@git diff --exit-code --
-
-.PHONY: checkgomod
-checkgomod: ## Check go.mod file
-	@go mod tidy
-	@git diff --exit-code -- go.sum go.mod
+.PHONY: lint
+lint: ## Run golangci-lint
+	@golangci-lint run ./...
 
 .PHONY: checkfmt
 checkfmt: ## Check go fmt output
-	@out=$$(gofmt -d $$(find . -path ./vendor -prune -o -name '*.go' -print)); \
+	@out=$$(gofmt -d $$(find . -name '*.go' -not -path './vendor/*' -print)); \
 	if [ -n "$${out}" ]; then \
 		echo "Code is not formatted!"; echo "$${out}"; echo; \
 		exit 1; \
 	fi
+
+.PHONY: fmt
+fmt: ## Format code
+	@gofmt -w $$(find . -name '*.go' -not -path './vendor/*' -print)
 
 ##@ Other
 help:  ## Display help
