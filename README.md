@@ -1,9 +1,14 @@
 # Finance API
 
+> **Disclaimer:** This project is for **educational purposes only** and is not intended for production financial use. Currency conversions use IEEE 754 floating-point arithmetic, which can introduce rounding errors. For real monetary calculations, use fixed-point or arbitrary-precision decimal libraries. Do not rely on this software for trading, accounting, or any financial decision-making.
+
+A financial data aggregator API that scrapes and caches historical price data from multiple sources.
+
 ## Supported Data Sources
 
 - [TEFAS](https://tefas.gov.tr/)
 - [Yahoo Finance](https://finance.yahoo.com/)
+- [IS Yatirim](https://www.isyatirim.com.tr/)
 
 ## Usage
 
@@ -12,19 +17,23 @@
 #### Download from releases
 
 ```bash
-./finance-api serve
+./finance-api
 ```
 
-##### Assing to a different port
+#### Run from source
 
 ```bash
-./finance-api serve --http=0.0.0.0:8080
+go run ./cmd/finance-api
 ```
 
+<<<<<<< HEAD
 #### Run from the source
+=======
+#### Make
+>>>>>>> ab37e3d (docs: update readme)
 
 ```bash
-go run main.go serve
+make run
 ```
 
 #### Docker
@@ -33,45 +42,116 @@ go run main.go serve
 docker compose up -d
 ```
 
-### Routes
+### Configuration
 
-#### TEFAS
+Environment variables with defaults:
 
+<<<<<<< HEAD
 ```
 http://127.0.0.1:8090/api/v1/tefas/funds/:code
+=======
+| Variable  | Default      | Description          |
+|-----------|--------------|----------------------|
+| `PORT`    | `8080`       | HTTP server port     |
+| `DB_PATH` | `finance.db` | SQLite database path |
+| `WORKERS` | `5`          | Scraper concurrency  |
+
+### API Routes
+
+#### Health
+
+```ascii
+GET /health
+>>>>>>> ab37e3d (docs: update readme)
 ```
 
-`:code` is the code of the fund to be fetched.
+#### List sources
 
+<<<<<<< HEAD
 #### Yahoo Finance
 
 ```
 http://127.0.0.1:8090/api/v1/yahoo/symbols/:symbol
+=======
+```ascii
+GET /api/v1/sources
+>>>>>>> ab37e3d (docs: update readme)
 ```
 
-`:symbol` is the symbol of the stock to be fetched. For example, for THYAO.IS
-`:symbol` is `THYAO.IS`.
+#### Get prices
 
-#### Admin UI
-
-```
-http://127.0.0.1:8090/_
+```ascii
+GET /api/v1/prices/{symbol}
 ```
 
-Default email is `admin@example.com` and password is `1234567890`.
+`{symbol}` is the fund code or ticker symbol (e.g. `YAC`, `AAPL`, `THYAO.IS`, `ALTINS1`).
 
+<<<<<<< HEAD
 ### Query parameters
+=======
+**Query parameters:**
+>>>>>>> ab37e3d (docs: update readme)
 
-- `startDate`: Start date of the data to be fetched. Format: `YYYY-MM-DD`
-- `endDate`: Optional, if not provided `today` will be used. End date of the
-  data to be fetched. Format: `YYYY-MM-DD`
-- `currency`: Currency of the data to be fetched. Can be either `TRY` or `USD`
-  - Note: Currently changing currency has no effect on the data.
-- `format`: Optional. Format of the data to be fetched. Available formats:
-  `json` or `csv`. Default is `json`.
+| Parameter   | Required | Default | Description                                       |
+|-------------|----------|---------|---------------------------------------------------|
+| `source`    | yes      |         | Data source: `tefas`, `yahoo`, or `isyatirim`     |
+| `startDate` | yes      |         | Start date, format `YYYY-MM-DD`                   |
+| `endDate`   | no       | today   | End date, format `YYYY-MM-DD`                     |
+| `currency`  | no       | `TRY`   | `TRY` or `USD`                                    |
+| `format`    | no       | `json`  | Response format: `json` or `csv`                  |
 
+**Examples:**
+
+```ascii
+GET /api/v1/prices/YAC?source=tefas&startDate=2024-01-01&endDate=2024-01-31&currency=TRY
+GET /api/v1/prices/AAPL?source=yahoo&startDate=2024-01-01&endDate=2024-01-31&currency=USD
+GET /api/v1/prices/THYAO.IS?source=yahoo&startDate=2024-01-01&currency=TRY&format=csv
+GET /api/v1/prices/ALTINS1?source=isyatirim&startDate=2025-01-01&endDate=2025-01-31&currency=TRY
+GET /api/v1/prices/XAUUSD?source=isyatirim&startDate=2025-01-01&endDate=2025-01-31&currency=USD
+GET /api/v1/prices/USDTRY?source=isyatirim&startDate=2025-01-01&endDate=2025-01-31&currency=TRY
 ```
-http://127.0.0.1:8090/api/v1/yahoo/symbols/THYAO.IS?startDate=2023-06-01&endDate=2023-09-30&currency=TRY
+
+#### Jobs
+
+```ascii
+GET /api/v1/jobs
+GET /api/v1/jobs/{id}
+```
+
+Each scrape operation creates a tracked job. Use these endpoints to inspect job status and history.
+
+### JSON Response Format
+
+All JSON responses are wrapped in:
+
+```json
+{
+  "message": "ok",
+  "data": {
+    "prices": [
+      {
+        "symbol": "YAC",
+        "date": "2026-01-20T00:00:00Z",
+        "closePrice": 0.367598,
+        "currency": "USD",
+        "nativePrice": 13.027306,
+        "nativeCurrency": "TRY",
+        "rate": 35.4379,
+        "source": "tefas"
+      },
+      {
+        "symbol": "YAC",
+        "date": "2026-01-21T00:00:00Z",
+        "closePrice": 0.366648,
+        "currency": "USD",
+        "nativePrice": 12.993608,
+        "nativeCurrency": "TRY",
+        "rate": 35.4379,
+        "source": "tefas"
+      }
+    ]
+  }
+}
 ```
 
 ### Use with Pandas
@@ -79,25 +159,33 @@ http://127.0.0.1:8090/api/v1/yahoo/symbols/THYAO.IS?startDate=2023-06-01&endDate
 ```python
 import pandas as pd
 
-API_URL = 'http://127.0.0.1:8090'
+API_URL = "http://127.0.0.1:8080"
 
-def get_data(symbol, start_date, end_date):
-    url = f'{API_URL}/api/v1/yahoo/symbols/{symbol}?startDate={start_date}&endDate={end_date}&format=csv'
-    df = pd.read_csv(url, parse_dates=['Date'])
-    df.set_index('Date', inplace=True)
+def get_data(source, symbol, start_date, end_date, currency="TRY"):
+    url = f"{API_URL}/api/v1/prices/{symbol}?source={source}&startDate={start_date}&endDate={end_date}&currency={currency}&format=csv"
+    df = pd.read_csv(url, parse_dates=["Date"])
+    df.set_index("Date", inplace=True)
     return df
 ```
 
-### Use as a Go package
+## Development
 
-Both `tefas` and `yahoo` packages can be used independently from the web API,
-and they implement `Scraper` interface.
+### Prerequisites
 
-```golang
-type Scraper interface {
-	GetSymbolData(symbol string, startDate, endDate time.Time) (<-chan *SymbolPrice, error)
-}
+- Go 1.24+
+- [golangci-lint](https://golangci-lint.run/) v2 (for linting)
+
+### Commands
+
+```bash
+make build     # Build the binary
+make run       # Build and run
+make test      # Run tests with race detector
+make lint      # Run golangci-lint
+make check     # Run lint + format check
+make fmt       # Format code
 ```
+<<<<<<< HEAD
 
 ```golang
 package main
@@ -170,3 +258,5 @@ code can be found under `/ui` folder.
 
 - [Pocketbase](https://github.com/pocketbase/pocketbase)
 - [Tremor](https://www.tremor.so/)
+=======
+>>>>>>> ab37e3d (docs: update readme)
