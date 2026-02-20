@@ -26,11 +26,7 @@ A financial data aggregator API that scrapes and caches historical price data fr
 go run ./cmd/finance-api
 ```
 
-<<<<<<< HEAD
-#### Run from the source
-=======
 #### Make
->>>>>>> ab37e3d (docs: update readme)
 
 ```bash
 make run
@@ -46,10 +42,6 @@ docker compose up -d
 
 Environment variables with defaults:
 
-<<<<<<< HEAD
-```
-http://127.0.0.1:8090/api/v1/tefas/funds/:code
-=======
 | Variable  | Default      | Description          |
 |-----------|--------------|----------------------|
 | `PORT`    | `8080`       | HTTP server port     |
@@ -62,20 +54,12 @@ http://127.0.0.1:8090/api/v1/tefas/funds/:code
 
 ```ascii
 GET /health
->>>>>>> ab37e3d (docs: update readme)
 ```
 
 #### List sources
 
-<<<<<<< HEAD
-#### Yahoo Finance
-
-```
-http://127.0.0.1:8090/api/v1/yahoo/symbols/:symbol
-=======
 ```ascii
 GET /api/v1/sources
->>>>>>> ab37e3d (docs: update readme)
 ```
 
 #### Get prices
@@ -86,11 +70,7 @@ GET /api/v1/prices/{symbol}
 
 `{symbol}` is the fund code or ticker symbol (e.g. `YAC`, `AAPL`, `THYAO.IS`, `ALTINS1`).
 
-<<<<<<< HEAD
-### Query parameters
-=======
 **Query parameters:**
->>>>>>> ab37e3d (docs: update readme)
 
 | Parameter   | Required | Default | Description                                       |
 |-------------|----------|---------|---------------------------------------------------|
@@ -185,78 +165,3 @@ make lint      # Run golangci-lint
 make check     # Run lint + format check
 make fmt       # Format code
 ```
-<<<<<<< HEAD
-
-```golang
-package main
-
-import (
-	"fmt"
-	"time"
-
-	"github.com/ahmethakanbesel/finance-api/tefas"
-	"github.com/ahmethakanbesel/finance-api/yahoo"
-)
-
-func main() {
-	ctx := context.Background()
-
-	tefasScraper := tefas.NewScraper(
-		tefas.WithWorkers(5),
-	)
-
-	// get last year's data for the given fund
-	tefasData, err := tefasScraper.GetSymbolData(ctx, "FUNDCODE", time.Now().AddDate(-1, 0, 0), time.Now())
-	if err != nil {
-		// handle error
-	}
-
-	for data := range tefasData {
-		fmt.Println(data.Date, data.Close)
-	}
-
-	yahooScraper := yahoo.NewScraper(
-		yahoo.WithWorkers(5),
-	)
-
-	// get last year's data for the given symbol
-	yahooData, err := yahooScraper.GetSymbolData(ctx, "SYMBOLCODE", time.Now().AddDate(-1, 0, 0), time.Now())
-	if err != nil {
-		// handle error
-	}
-
-	for data := range yahooData {
-		fmt.Println(data.Date, data.Close)
-	}
-}
-```
-
-## Demo
-
-- `TEFAS (json)`
-
-```
-https://finans.dokuz.gen.tr/api/v1/tefas/funds/HKP?startDate=2023-06-01&endDate=2023-09-30&currency=TRY
-```
-
-- `Yahoo Finance (csv)`
-
-```
-https://finans.dokuz.gen.tr/api/v1/yahoo/symbols/THYAO.IS?startDate=2023-06-01&endDate=2023-09-30&currency=TRY&format=csv
-```
-
-## Web UI
-
-The web UI is incomplete, and it is not ready to work out of the box. The source
-code can be found under `/ui` folder.
-
-### Preview
-
-![web ui preview](/docs/web-ui-preview.png "web ui preview")
-
-## Credits
-
-- [Pocketbase](https://github.com/pocketbase/pocketbase)
-- [Tremor](https://www.tremor.so/)
-=======
->>>>>>> ab37e3d (docs: update readme)
