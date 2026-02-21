@@ -3,13 +3,18 @@ linters:
   enable:
     - bodyclose
     - copyloopvar
+    - errcheck
     - gosec
+    - govet
+    - ineffassign
     - misspell
     - nilerr
     - prealloc
     - revive
+    - staticcheck
     - unconvert
     - unparam
+    - unused
   settings:
     gosec:
       excludes:
