@@ -87,8 +87,8 @@ GET /api/v1/prices/YAC?source=tefas&startDate=2024-01-01&endDate=2024-01-31&curr
 GET /api/v1/prices/AAPL?source=yahoo&startDate=2024-01-01&endDate=2024-01-31&currency=USD
 GET /api/v1/prices/THYAO.IS?source=yahoo&startDate=2024-01-01&currency=TRY&format=csv
 GET /api/v1/prices/ALTINS1?source=isyatirim&startDate=2025-01-01&endDate=2025-01-31&currency=TRY
-GET /api/v1/prices/XAUUSD?source=isyatirim&startDate=2025-01-01&endDate=2025-01-31&currency=USD
-GET /api/v1/prices/USDTRY?source=isyatirim&startDate=2025-01-01&endDate=2025-01-31&currency=TRY
+GET /api/v1/prices/GC=F?source=yahoo&startDate=2025-01-01&endDate=2025-01-31&currency=USD
+GET /api/v1/prices/USDTRY=X?source=yahoo&startDate=2025-01-01&endDate=2025-01-31&currency=TRY
 ```
 
 #### Jobs
