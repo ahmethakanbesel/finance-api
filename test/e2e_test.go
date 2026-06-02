@@ -23,6 +23,21 @@ import (
 	"github.com/ahmethakanbesel/finance-api/internal/server"
 )
 
+// tefasResp builds a response in the shape of TEFAS's fonFiyatBilgiGetir API.
+// dates are "YYYY-MM-DD".
+func tefasResp(dates []string, prices []float64) map[string]any {
+	list := make([]map[string]any, 0, len(dates))
+	for i := range dates {
+		list = append(list, map[string]any{
+			"fonKodu":  "YAC",
+			"fonUnvan": "TEST FUND",
+			"tarih":    dates[i],
+			"fiyat":    prices[i],
+		})
+	}
+	return map[string]any{"errorCode": nil, "errorMessage": nil, "resultList": list}
+}
+
 func setupE2E(t *testing.T, tefasURL, isyatirimURL string) *httptest.Server {
 	t.Helper()
 
@@ -39,9 +54,7 @@ func setupE2E(t *testing.T, tefasURL, isyatirimURL string) *httptest.Server {
 	registry := scraper.NewRegistry()
 	registry.Register(tefas.New(
 		tefas.WithWorkers(1),
-		tefas.WithHistoryEndpoint(tefasURL),
-		tefas.WithBaseURL(tefasURL),
-		tefas.WithReferer(tefasURL),
+		tefas.WithEndpoint(tefasURL),
 	))
 	registry.Register(yahoo.New(
 		yahoo.WithWorkers(1),
@@ -147,13 +160,10 @@ func TestE2E_ListSources(t *testing.T) {
 func TestE2E_GetPrices_TEFAS(t *testing.T) {
 	// Mock TEFAS server
 	mockTefas := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		_ = json.NewEncoder(w).Encode(map[string]any{
-			"recordsTotal": 2,
-			"data": []map[string]any{
-				{"TARIH": "1704067200000", "FONKODU": "YAC", "FIYAT": 1.23},
-				{"TARIH": "1704153600000", "FONKODU": "YAC", "FIYAT": 1.24},
-			},
-		})
+		_ = json.NewEncoder(w).Encode(tefasResp(
+			[]string{"2024-01-01", "2024-01-02"},
+			[]float64{1.23, 1.24},
+		))
 	}))
 	defer mockTefas.Close()
 
@@ -233,22 +243,15 @@ func TestE2E_GetPrices_Dedup(t *testing.T) {
 	callCount := 0
 	mockTefas := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		callCount++
-		// Return enough prices to cover the range (5 weekdays in Jan 1-5)
-		data := make([]map[string]any, 0)
+		// Return enough prices to cover the range (5 days in Jan 1-5)
+		dates := make([]string, 0, 5)
+		prices := make([]float64, 0, 5)
 		start := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
 		for i := 0; i < 5; i++ {
-			d := start.AddDate(0, 0, i)
-			ms := d.UnixMilli()
-			data = append(data, map[string]any{
-				"TARIH":   fmt.Sprintf("%d", ms),
-				"FONKODU": "YAC",
-				"FIYAT":   1.23 + float64(i)*0.01,
-			})
+			dates = append(dates, start.AddDate(0, 0, i).Format("2006-01-02"))
+			prices = append(prices, 1.23+float64(i)*0.01)
 		}
-		_ = json.NewEncoder(w).Encode(map[string]any{
-			"recordsTotal": len(data),
-			"data":         data,
-		})
+		_ = json.NewEncoder(w).Encode(tefasResp(dates, prices))
 	}))
 	defer mockTefas.Close()
 
@@ -289,12 +292,7 @@ func TestE2E_GetPrices_Dedup(t *testing.T) {
 
 func TestE2E_GetPrices_CSV(t *testing.T) {
 	mockTefas := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		_ = json.NewEncoder(w).Encode(map[string]any{
-			"recordsTotal": 1,
-			"data": []map[string]any{
-				{"TARIH": "1704067200000", "FONKODU": "YAC", "FIYAT": 1.23},
-			},
-		})
+		_ = json.NewEncoder(w).Encode(tefasResp([]string{"2024-01-01"}, []float64{1.23}))
 	}))
 	defer mockTefas.Close()
 
@@ -350,12 +348,7 @@ func TestE2E_GetPrices_InvalidParams(t *testing.T) {
 
 func TestE2E_Jobs(t *testing.T) {
 	mockTefas := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		_ = json.NewEncoder(w).Encode(map[string]any{
-			"recordsTotal": 1,
-			"data": []map[string]any{
-				{"TARIH": "1704067200000", "FONKODU": "YAC", "FIYAT": 1.23},
-			},
-		})
+		_ = json.NewEncoder(w).Encode(tefasResp([]string{"2024-01-01"}, []float64{1.23}))
 	}))
 	defer mockTefas.Close()
 
